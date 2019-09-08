@@ -26,11 +26,14 @@ import "github.com/rvflash/backoff"
 
 `backoff` uses the Go modules that required Go 1.11 or later.
 
+
 ## Features
 
 Based on the Fibonacci suite (1, 1, 2, 3, 5, 8, 13, 21, etc.), the `backoff` strategy do or retry a given task.
-See the documentation for more details and samples.
+By default, `DefaultInterval` is used as interval, so the sleep duration is the `current Fibonacci value * 500 * time.Millisecond`.
 With the `New` method, you can create your own Backoff strategy but by default, the following implementation are available:  
+See the documentation for more details and samples.
+
 
 ### Do 
 
@@ -39,6 +42,7 @@ As long as the task return in success and the context not done, BackOff will con
 
 * DoN: does the same job as Do but limits the number of attempt.
 * DoUntil: does the same job as Do but limits the execution to the given deadline.
+
 
 ### Retry 
 
@@ -62,7 +66,7 @@ import (
 )
 
 func main() {
-	// task impgic lements the backoff.Func interface.
+	// task implements the backoff.Func interface.
 	task := func(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
