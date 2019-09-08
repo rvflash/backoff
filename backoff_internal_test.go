@@ -22,7 +22,7 @@ func TestFibonacci(t *testing.T) {
 
 func TestBackoff_Do(t *testing.T) {
 	// Fib check
-	var bo backoff
+	var bo Backoff
 	n, err := bo.Do(void)
 	are := is.New(t)
 	are.Equal(err, context.Canceled) // mismatch error

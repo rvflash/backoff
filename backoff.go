@@ -30,7 +30,7 @@ func fibonacci() funcAlgorithm {
 	}
 }
 
-// Func must be implemented by any function to be run by the backoff.
+// Func must be implemented by any function to be run by the Backoff.
 type Func func(context.Context) error
 
 // Do guarantees to execute at least once f if ctx is not already cancelled.
@@ -66,8 +66,8 @@ func RetryUntil(ctx context.Context, t time.Time, f Func) (int, error) {
 	return New(ctx).WithDeadline(t).Retry(f)
 }
 
-// Backoff is a backoff strategy for retrying an operation based on the Fibonacci suite.
-type Backoff interface {
+// Retryer is a Backoff strategy for retrying an operation based on the Fibonacci suite.
+type Retryer interface {
 	// Attempt returns the current number of attempt.
 	Attempt() int
 	// Do executes the given function every "fib tick" as long as it is successful.
@@ -78,17 +78,17 @@ type Backoff interface {
 	// Retry executes the given function every "fib tick" as long as it is failed.
 	// A context cancelled, a deadline or maximum attempt exceeded can also break the loop.
 	Retry(f Func) (int, error)
-	// WithDeadline creates a copy of the current backoff to defines a new context
+	// WithDeadline creates a copy of the current Backoff to defines a new context
 	// with the deadline adjusted to be no later than t.
-	WithDeadline(t time.Time) Backoff
+	WithDeadline(t time.Time) Retryer
 	// WithInterval sets the time interval between two try with the value of d.
-	WithInterval(d time.Duration) Backoff
+	WithInterval(d time.Duration) Retryer
 	// WithMaxAttempt sets the maximum number of attempt to n.
-	WithMaxAttempt(n int) Backoff
+	WithMaxAttempt(n int) Retryer
 }
 
 // New returns a new instance of Backoff.
-func New(ctx context.Context) Backoff {
+func New(ctx context.Context) *Backoff {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -97,17 +97,17 @@ func New(ctx context.Context) Backoff {
 	return b
 }
 
-func newBackoff() *backoff {
-	return &backoff{
+func newBackoff() *Backoff {
+	return &Backoff{
 		interval: DefaultInterval,
 		err:      make(chan error),
 		fib:      fibonacci(),
 	}
 }
 
-// backoff is a time.Duration and an attempt counter.
+// Backoff is a time.Duration and an attempt counter.
 // It provides means to do and retry something based on the Fibonacci suite as trigger.
-type backoff struct {
+type Backoff struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	err    chan error
@@ -119,15 +119,15 @@ type backoff struct {
 	mu       sync.RWMutex
 }
 
-// Attempt implements the Backoff interface.
-func (b *backoff) Attempt() int {
+// Attempt implements the Retryer interface.
+func (b *Backoff) Attempt() int {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	return b.attempt
 }
 
-// Do implements the Backoff interface.
-func (b *backoff) Do(f Func) (int, error) {
+// Do implements the Retryer interface.
+func (b *Backoff) Do(f Func) (int, error) {
 	if b.fib == nil {
 		return b.Attempt(), context.Canceled
 	}
@@ -135,16 +135,16 @@ func (b *backoff) Do(f Func) (int, error) {
 	return b.done()
 }
 
-// Reset implements the Backoff interface.
-func (b *backoff) Reset() {
+// Reset implements the Retryer interface.
+func (b *Backoff) Reset() {
 	b.mu.Lock()
 	b.attempt = 0
 	b.fib = fibonacci()
 	b.mu.Unlock()
 }
 
-// Retry implements the Backoff interface.
-func (b *backoff) Retry(f Func) (int, error) {
+// Retry implements the Retryer interface.
+func (b *Backoff) Retry(f Func) (int, error) {
 	if b.fib == nil {
 		return b.Attempt(), context.Canceled
 	}
@@ -152,15 +152,15 @@ func (b *backoff) Retry(f Func) (int, error) {
 	return b.done()
 }
 
-// WithDeadline implements the Backoff interface.
-func (b *backoff) WithDeadline(t time.Time) Backoff {
+// WithDeadline implements the Retryer interface.
+func (b *Backoff) WithDeadline(t time.Time) Retryer {
 	b2 := b.copy()
 	b2.ctx, b2.cancel = context.WithDeadline(b.ctx, t)
 	return b2
 }
 
-// WithInterval implements the Backoff interface.
-func (b *backoff) WithInterval(d time.Duration) Backoff {
+// WithInterval implements the Retryer interface.
+func (b *Backoff) WithInterval(d time.Duration) Retryer {
 	if d > 0 {
 		b.mu.Lock()
 		b.interval = d
@@ -169,8 +169,8 @@ func (b *backoff) WithInterval(d time.Duration) Backoff {
 	return b
 }
 
-// WithMaxAttempt implements the Backoff interface.
-func (b *backoff) WithMaxAttempt(n int) Backoff {
+// WithMaxAttempt implements the Retryer interface.
+func (b *Backoff) WithMaxAttempt(n int) Retryer {
 	if n > -1 {
 		b.mu.Lock()
 		b.maxAttempt = n
@@ -179,9 +179,9 @@ func (b *backoff) WithMaxAttempt(n int) Backoff {
 	return b
 }
 
-// copy copies the backoff to create a new one with the same behavior.
+// copy copies the Backoff to create a new one with the same behavior.
 // It also takes care of the underlying mutex.
-func (b *backoff) copy() *backoff {
+func (b *Backoff) copy() *Backoff {
 	b2 := newBackoff()
 	b.mu.Lock()
 	b2.interval = b.interval
@@ -191,7 +191,7 @@ func (b *backoff) copy() *backoff {
 }
 
 // done waits the end of the job, done or cancelled.
-func (b *backoff) done() (int, error) {
+func (b *Backoff) done() (int, error) {
 	defer b.cancel()
 	select {
 	case <-b.ctx.Done():
@@ -202,7 +202,7 @@ func (b *backoff) done() (int, error) {
 }
 
 // next increments the number of attempt, to validate or not the go to the next iteration.
-func (b *backoff) next() error {
+func (b *Backoff) next() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -214,8 +214,8 @@ func (b *backoff) next() error {
 	return nil
 }
 
-// run runs the Backoff strategy by using f as job to do and retry as mode.
-func (b *backoff) run(f Func, retry bool) {
+// run runs the Retryer strategy by using f as job to do and retry as mode.
+func (b *Backoff) run(f Func, retry bool) {
 	var err, rrr error
 	for {
 		select {
@@ -252,7 +252,7 @@ func (b *backoff) run(f Func, retry bool) {
 
 // sleep pauses the current goroutine for at least the duration of the interval
 // multiplied by the current Fibonacci value.
-func (b *backoff) sleep() error {
+func (b *Backoff) sleep() error {
 	b.mu.Lock()
 	d := b.fib() * b.interval
 	b.mu.Unlock()
