@@ -1,4 +1,4 @@
-# backoff
+# Fibonacci backoff implementation
 
 [![GoDoc](https://godoc.org/github.com/rvflash/backoff?status.svg)](https://godoc.org/github.com/rvflash/backoff)
 [![Build Status](https://img.shields.io/travis/rvflash/backoff.svg)](https://travis-ci.org/rvflash/backoff)
@@ -6,6 +6,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rvflash/backoff)](https://goreportcard.com/report/github.com/rvflash/backoff)
 
 The package `backoff` implements a Fibonacci backoff algorithm.
+
 
 ### Installation
     
