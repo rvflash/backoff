@@ -33,7 +33,7 @@ func fibonacci() funcAlgorithm {
 // Func must be implemented by any function to be run by the Backoff.
 type Func func(context.Context) error
 
-// RetryerFunc is implemented by any backoff strategy<
+// RetryerFunc is implemented by any backoff strategy.
 type RetryerFunc func(ctx context.Context, f Func) (int, error)
 
 // Do guarantees to execute at least once f if ctx is not already cancelled.
@@ -73,27 +73,6 @@ func RetryN(ctx context.Context, attempt int, f Func) (int, error) {
 // It's implements the RetryerFunc interface.
 func RetryUntil(ctx context.Context, t time.Time, f Func) (int, error) {
 	return New(ctx).WithDeadline(t).Retry(f)
-}
-
-// Retryer is a Backoff strategy for retrying an operation based on the Fibonacci suite.
-type Retryer interface {
-	// Attempt returns the current number of attempt.
-	Attempt() int
-	// Do executes the given function every "fib tick" as long as it is successful.
-	// A context cancelled, a deadline or maximum attempt exceeded can also break the loop.
-	Do(f Func) (int, error)
-	// Reset resets to initial state.
-	Reset()
-	// Retry executes the given function every "fib tick" as long as it is failed.
-	// A context cancelled, a deadline or maximum attempt exceeded can also break the loop.
-	Retry(f Func) (int, error)
-	// WithDeadline creates a copy of the current Backoff to defines a new context
-	// with the deadline adjusted to be no later than t.
-	WithDeadline(t time.Time) Retryer
-	// WithInterval sets the time interval between two try with the value of d.
-	WithInterval(d time.Duration) Retryer
-	// WithMaxAttempt sets the maximum number of attempt to n.
-	WithMaxAttempt(n int) Retryer
 }
 
 // New returns a new instance of Backoff.
@@ -162,14 +141,14 @@ func (b *Backoff) Retry(f Func) (int, error) {
 }
 
 // WithDeadline implements the Retryer interface.
-func (b *Backoff) WithDeadline(t time.Time) Retryer {
+func (b *Backoff) WithDeadline(t time.Time) *Backoff {
 	b2 := b.copy()
 	b2.ctx, b2.cancel = context.WithDeadline(b.ctx, t)
 	return b2
 }
 
 // WithInterval implements the Retryer interface.
-func (b *Backoff) WithInterval(d time.Duration) Retryer {
+func (b *Backoff) WithInterval(d time.Duration) *Backoff {
 	if d > 0 {
 		b.mu.Lock()
 		b.interval = d
@@ -179,7 +158,7 @@ func (b *Backoff) WithInterval(d time.Duration) Retryer {
 }
 
 // WithMaxAttempt implements the Retryer interface.
-func (b *Backoff) WithMaxAttempt(n int) Retryer {
+func (b *Backoff) WithMaxAttempt(n int) *Backoff {
 	if n > -1 {
 		b.mu.Lock()
 		b.maxAttempt = n

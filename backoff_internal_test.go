@@ -21,7 +21,7 @@ func TestFibonacci(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	var bo Retryer = New(context.Background())
+	bo := New(context.Background())
 	is.New(t).Equal(bo.Attempt(), 0)
 }
 
