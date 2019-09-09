@@ -33,35 +33,44 @@ func fibonacci() funcAlgorithm {
 // Func must be implemented by any function to be run by the Backoff.
 type Func func(context.Context) error
 
+// RetryerFunc is implemented by any backoff strategy<
+type RetryerFunc func(ctx context.Context, f Func) (int, error)
+
 // Do guarantees to execute at least once f if ctx is not already cancelled.
 // As long as f return in success and the context not done, BackOff will continue to call it,
 // with sleep duration based the Fibonacci suite and the BackOff's interval.
+// It's implements the RetryerFunc interface.
 func Do(ctx context.Context, f Func) (int, error) {
 	return New(ctx).Do(f)
 }
 
 // DoN does the same job as Do but limits the number of attempt to n.
+// It's implements the RetryerFunc interface.
 func DoN(ctx context.Context, attempt int, f Func) (int, error) {
 	return New(ctx).WithMaxAttempt(attempt).Do(f)
 }
 
 // DoUntil does the same job as Do but limits ctx by adjusting the deadline to be no later than d.
+// It's implements the RetryerFunc interface.
 func DoUntil(ctx context.Context, t time.Time, f Func) (int, error) {
 	return New(ctx).WithDeadline(t).Do(f)
 }
 
 // Retry retries the function f until it does not return error or BackOff stops.
 // f is guaranteed to be run at least once, unless the context is already cancelled.
+// It's implements the RetryerFunc interface.
 func Retry(ctx context.Context, f Func) (int, error) {
 	return New(ctx).Retry(f)
 }
 
 // RetryN does the same as Retry but limits the number of attempt to n.
+// It's implements the RetryerFunc interface.
 func RetryN(ctx context.Context, attempt int, f Func) (int, error) {
 	return New(ctx).WithMaxAttempt(attempt).Retry(f)
 }
 
 // RetryUntil does the same job as Retry but limits ctx by adjusting the deadline to be no later than d.
+// It's implements the RetryerFunc interface.
 func RetryUntil(ctx context.Context, t time.Time, f Func) (int, error) {
 	return New(ctx).WithDeadline(t).Retry(f)
 }

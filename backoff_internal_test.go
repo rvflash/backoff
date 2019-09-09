@@ -20,6 +20,11 @@ func TestFibonacci(t *testing.T) {
 	}
 }
 
+func TestNew(t *testing.T) {
+	var bo Retryer = New(context.Background())
+	is.New(t).Equal(bo.Attempt(), 0)
+}
+
 func TestBackoff_Do(t *testing.T) {
 	// Fib check
 	var bo Backoff
