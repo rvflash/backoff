@@ -25,6 +25,7 @@ import "github.com/rvflash/backoff"
 ### Prerequisite
 
 `backoff` uses the Go modules that required Go 1.11 or later.
+The `go.mod` file refers to Go 1.13 because the tests uses the new error method `As`.
 
 
 ## Features

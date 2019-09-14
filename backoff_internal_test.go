@@ -36,12 +36,27 @@ func TestBackoff_Do(t *testing.T) {
 
 func TestBackoff_Retry(t *testing.T) {
 	// No context
-	var ctx context.Context
-	bo := New(ctx)
+	var (
+		bo  *Backoff
+		ctx context.Context
+		are = is.New(t)
+	)
+	bo = &Backoff{}
 	n, err := bo.Retry(void)
-	are := is.New(t)
+	are.Equal(err, context.Canceled) // mismatch error
+	are.Equal(n, 0)                  // mismatch attempt
+	bo = New(ctx)
+	n, err = bo.Retry(void)
 	are.NoErr(err)  // unexpected error
 	are.Equal(n, 0) // mismatch attempt
+}
+
+func TestBackoff_Reset(t *testing.T) {
+	bo := New(context.Background()).WithInterval(time.Millisecond)
+	are := is.New(t)
+	are.True(bo.interval == time.Millisecond)
+	bo.Reset()
+	are.True(bo.interval == DefaultInterval)
 }
 
 // void implements the Func interface.

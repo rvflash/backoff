@@ -128,6 +128,7 @@ func (b *Backoff) Reset() {
 	b.mu.Lock()
 	b.attempt = 0
 	b.fib = fibonacci()
+	b.interval = DefaultInterval
 	b.mu.Unlock()
 }
 
