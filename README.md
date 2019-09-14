@@ -25,6 +25,7 @@ import "github.com/rvflash/backoff"
 ### Prerequisite
 
 `backoff` uses the Go modules that required Go 1.11 or later.
+The `go.mod` file refers to Go 1.13 because the tests uses the new error method `As`.
 
 
 ## Features
@@ -40,16 +41,16 @@ See the documentation for more details and samples.
 `Do` guarantees to execute at least once the task if the context is not already cancelled.
 As long as the task return in success and the context not done, BackOff will continue to call it, with a sleep duration based the Fibonacci suite and the BackOff's interval.
 
-* DoN: does the same job as Do but limits the number of attempt.
-* DoUntil: does the same job as Do but limits the execution to the given deadline.
+* `DoN`: does the same job as Do but limits the number of attempt.
+* `DoUntil`: does the same job as Do but limits the execution to the given deadline.
 
 
 ### Retry 
 
 `Retry` retries the task until it does not return error or BackOff stops.
 
-* RetryN: does the same job as Do but limits the number of attempt.
-* RetryUntil: does the same job as Do but limits the execution to the given deadline.
+* `RetryN`: does the same job as Do but limits the number of attempt.
+* `RetryUntil`: does the same job as Do but limits the execution to the given deadline.
 
 
 ## Quick start
